@@ -26,6 +26,8 @@ export default App;
 */
 
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import { Container as MuiContainer, Grid, CssBaseline, Drawer } from '@mui/material';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -35,49 +37,68 @@ import Navbar from './components/Navbar';
 import Container from './components/Container';
 import Button from './components/Button';
 import './App.css';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import { Provider, useSelector, useDispatch } from 'react-redux';
+import { increment, decrement } from './redux/counterSlice';
 
 const App = () => {
-  const [selectedLab, setSelectedLab] = useState(null); // Состояние для выбранной лабораторной работы
-  const [menuOpen, setMenuOpen] = useState(false); // Состояние для открытия меню
-
-  const handleLabSelect = (lab) => {
-    setSelectedLab(lab); // Устанавливаем выбранную лабораторную работу
-    setMenuOpen(false); // Закрываем меню после выбора
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleClick = () => {
     alert('Hello World!');
   };
 
+  const Counter = () => {
+  const count = useSelector((state) => state.counter.value); // Обратите внимание на 'counter'
+  const dispatch = useDispatch();
 
   return (
-    <MuiContainer className="app">
-      <CssBaseline />
-      <Navbar />
-      <Header />
+    <div>
+      <h2>Счетчик: {count}</h2>
+      <button onClick={() => dispatch(increment())}>Увеличить</button>
+      <button onClick={() => dispatch(decrement())}>Уменьшить</button>
+    </div>
+  );
+};
 
-      {/* Меню отображается в Drawer */}
-      <Drawer anchor="left" open={menuOpen} onClose={() => setMenuOpen(false)}>
-        <Menu onLabSelect={handleLabSelect} />
-      </Drawer>
+  return (
+    <Router>
+      <ThemeProvider>
+        <MuiContainer className="app">
+          <CssBaseline />
+          <Navbar />
+          <Header />
 
-      {/* Основной контент */}
-      <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
-          <button onClick={() => setMenuOpen(true)}>Открыть меню</button>
-        </Grid>
-        <Grid item xs={12} md={9}>
-          <Container>
-            <h1>Hello World!</h1>
-            <Button text="Нажми меня" onClick={handleClick} />
-            <Content lab={selectedLab} />
-          </Container>
-        </Grid>
-      </Grid>
+          <Drawer anchor="left" open={menuOpen} onClose={() => setMenuOpen(false)}>
+            <Menu onClose={() => setMenuOpen(false)} />
+          </Drawer>
 
-      <Footer />
-    </MuiContainer>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={3}>
+              <button onClick={() => setMenuOpen(true)}>Открыть меню</button>
+            </Grid>
+            <Grid item xs={12} md={9}>
+              <Container>
+                <h1>Hello World!</h1>
+                <Button text="Нажми меня" onClick={handleClick} />
+                <Routes>
+                  <Route path="/" element={<Content />} />
+                  <Route path="/lab/:id" element={<Content />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                </Routes>
+                <Counter />
+              </Container>
+            </Grid>
+          </Grid>
+
+          <Footer />
+        </MuiContainer>
+      </ThemeProvider>
+    </Router>
   );
 };
 
 export default App;
+
