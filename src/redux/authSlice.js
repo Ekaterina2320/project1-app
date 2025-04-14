@@ -1,24 +1,49 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+const loadUsersFromLocalStorage = () => {
+  const users = localStorage.getItem('registeredUsers');
+  return users ? JSON.parse(users) : [];
+};
+
 const initialState = {
   isAuthenticated: false,
-  user: null,
+  currentUser: null,
+  registeredUsers: loadUsersFromLocalStorage()
 };
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    login: (state, action) => {
-      state.isAuthenticated = true;
-      state.user = action.payload;
+    registerUser: (state, action) => {
+      const newUser = action.payload;
+      // Проверяем, нет ли уже пользователя с таким email
+      const userExists = state.registeredUsers.some(user => user.email === newUser.email);
+
+      if (!userExists) {
+        state.registeredUsers.push(newUser);
+        state.currentUser = newUser;
+        state.isAuthenticated = true;
+        localStorage.setItem('registeredUsers', JSON.stringify(state.registeredUsers));
+      }
     },
-    logout: (state) => {
+    loginUser: (state, action) => {
+      const { email, password } = action.payload;
+      const user = state.registeredUsers.find(
+        user => user.email === email && user.password === password
+      );
+
+      if (user) {
+        state.currentUser = user;
+        state.isAuthenticated = true;
+      }
+    },
+    logoutUser: (state) => {
+      state.currentUser = null;
       state.isAuthenticated = false;
-      state.user = null;
-    },
-  },
+    }
+  }
 });
 
-export const { login, logout } = authSlice.actions;
+export const { registerUser, loginUser, logoutUser } = authSlice.actions;
 export default authSlice.reducer;

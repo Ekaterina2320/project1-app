@@ -6,25 +6,16 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('light');
 
   useEffect(() => {
-    // Монтирование
-    console.log('ThemeContext mounted');
-
-    // Чтение из localStorage
     const storedTheme = localStorage.getItem('theme');
     if (storedTheme) {
       setTheme(storedTheme);
     }
-
-    return () => {
-      // Размонтирование
-      console.log('ThemeContext unmounted');
-    };
   }, []);
 
   useEffect(() => {
-    // Обновление localStorage при изменении темы
     localStorage.setItem('theme', theme);
-    document.body.className = theme; // Применение темы к body
+    document.body.className = theme;
+    document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => {

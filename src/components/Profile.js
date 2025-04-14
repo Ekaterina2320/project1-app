@@ -1,20 +1,23 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../redux/authSlice';
+import { logoutUser } from '../redux/authSlice';
 
 const Profile = () => {
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
+  const currentUser = useSelector(state => state.auth.currentUser);
 
   const handleLogout = () => {
-    dispatch(logout());
-    localStorage.removeItem('user');
+    dispatch(logoutUser());
+    localStorage.removeItem('currentUser');
   };
 
   return (
-    <div>
-      <span>Добро пожаловать, {user.login}</span>
-      <button onClick={handleLogout}>Выйти</button>
+    <div className="profile">
+      <h2>Добро пожаловать, {currentUser?.name}</h2>
+      <p>Email: {currentUser?.email}</p>
+      <button onClick={handleLogout} className="logout-btn">
+        Выйти
+      </button>
     </div>
   );
 };
