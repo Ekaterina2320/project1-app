@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { Container as MuiContainer, Grid, CssBaseline, Drawer } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-//import { login } from './redux/authSlice';
 import { loginUser } from './redux/authSlice';
 import useLoginState from './hooks/useLoginState';
 import AuthForm  from './components/AuthForm';
@@ -28,7 +27,6 @@ const App = () => {
   const [showLogin, setShowLogin] = useState(true); // true for login, false for register
   //const isAuthenticated = useLoginState();
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
-  const count = useSelector((state) => state.counter.value);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -55,7 +53,7 @@ const App = () => {
     const dispatch = useDispatch();
 
     return (
-      <div>
+      <div className="Counter">
         <h2>Счётчик: {count}</h2>
         <button onClick={() => dispatch(increment())}>Увеличить</button>
         <button onClick={() => dispatch(decrement())}>Уменьшить</button>
@@ -100,14 +98,17 @@ const App = () => {
                     </button>
                   </>
                 )}
-                <h1>Hello World!</h1>
-                <Button text="Нажми меня!" onClick={() => alert('Hello World!')} />
-                <Routes>
-                  <Route path="/" element={<Content />} />
-                  <Route path="/lab/:id" element={<Content />} />
-                  <Route path="/about" element={<About />} />
-                  <Route path="/contact" element={<Contact />} />
-                </Routes>
+                <div className="page-content">
+                  <h1>Hello World!</h1>
+                  <Button text="Нажми меня!" onClick={() => alert('Hello World!')} />
+
+                  <Routes>
+                    <Route path="/" element={<Content />} />
+                    <Route path="/lab/:id" element={<Content />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
+                  </Routes>
+                </div>
                 <Counter />
               </Container>
             </Grid>

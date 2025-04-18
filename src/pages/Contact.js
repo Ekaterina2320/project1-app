@@ -4,7 +4,11 @@ import Container from '../components/Container';
 const Contact = () => {
   return (
     <Container>
-      <h1>Контакты</h1>
+      <div className="page-content">
+        <h1>Контакты</h1>
+        <p>Email: admin@admin.com</p>
+        <p>Обращаться лично к разработчику Екатерине</p>
+      </div>
     </Container>
   );
 };

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { registerUser, loginUser } from '../redux/authSlice';
 
 const AuthForm = ({ isLogin, onSuccess }) => {
@@ -9,19 +9,26 @@ const AuthForm = ({ isLogin, onSuccess }) => {
     handleSubmit,
     formState: { errors },
     reset,
-    watch // Добавляем watch в деструктуризацию
+    watch
   } = useForm();
 
   const dispatch = useDispatch();
+  const { isLoading, error } = useSelector(state => state.auth);
+  const [localError, setLocalError] = useState(null);
 
-  const onSubmit = (data) => {
-    if (isLogin) {
-      dispatch(loginUser(data));
-    } else {
-      dispatch(registerUser(data));
+  const onSubmit = async (data) => {
+    setLocalError(null);
+    try {
+      if (isLogin) {
+        await dispatch(loginUser(data)).unwrap();
+      } else {
+        await dispatch(registerUser(data)).unwrap();
+      }
+      reset();
+      onSuccess();
+    } catch (error) {
+      setLocalError(error);
     }
-    reset();
-    onSuccess();
   };
 
   return (
@@ -86,8 +93,16 @@ const AuthForm = ({ isLogin, onSuccess }) => {
         </div>
       )}
 
-      <button type="submit" className="submit-btn">
-        {isLogin ? 'Войти' : 'Зарегистрироваться'}
+      {(error || localError) && (
+        <div className="error-message">{error || localError}</div>
+      )}
+
+      <button
+        type="submit"
+        className="submit-btn"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Загрузка...' : isLogin ? 'Войти' : 'Зарегистрироваться'}
       </button>
     </form>
   );

@@ -1,0 +1,44 @@
+{
+  "users": [
+    {
+      "id": "2864",
+      "email": "katya@gmail.com",
+      "password": "123456",
+      "name": "Катя Какатя",
+      "confirmPassword": "123456"
+    },
+    {
+      "id": "533a",
+      "email": "7@mail.ru",
+      "password": "admin7",
+      "name": "7",
+      "confirmPassword": "admin7"
+    }
+  ],
+  "feedbacks": [
+    {
+      "id": "313d",
+      "title": "первый отзыв",
+      "message": "Очень очень хороший сайт!!!!!!!!!!!!!!!!!!!!!!!!!!",
+      "author": "Катя",
+      "userId": "322f",
+      "date": "2025-04-17T16:43:06.364Z"
+    },
+    {
+      "id": "3235",
+      "title": "третий отзыв",
+      "message": "ПРОСТО УЖАСНЫЙ САЙТ",
+      "author": "Маша",
+      "userId": "7e9b",
+      "date": "2025-04-17T16:43:52.812Z"
+    },
+    {
+      "id": "dbf2",
+      "title": "EcoScan",
+      "message": "Наш проект позволит утилизировать мусор правильно",
+      "author": "7",
+      "userId": "533a",
+      "date": "2025-04-18T13:29:29.234Z"
+    }
+  ]
+}
