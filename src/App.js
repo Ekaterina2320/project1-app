@@ -4,10 +4,10 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Container as MuiContainer, Grid, CssBaseline, Drawer } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from './redux/authSlice';
-import useLoginState from './hooks/useLoginState';
+//import useLoginState from './hooks/useLoginState';
 import AuthForm  from './components/AuthForm';
-import FeedbackForm from './components/FeedbackForm';
-import FeedbackList from './components/FeedbackList';
+//import FeedbackForm from './components/FeedbackForm';
+//import FeedbackList from './components/FeedbackList';
 import Profile from './components/Profile';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -68,9 +68,7 @@ const App = () => {
           <CssBaseline />
           <Navbar />
           <Header />
-          
           {isAuthenticated }
-
           <Drawer anchor="left" open={menuOpen} onClose={() => setMenuOpen(false)}>
             <Menu onClose={() => setMenuOpen(false)} />
           </Drawer>
@@ -84,14 +82,12 @@ const App = () => {
                 {isAuthenticated ? (
                   <>
                     <Profile />
-                    <FeedbackForm addFeedback={addFeedback} />
-                    <FeedbackList feedbacks={feedbacks} />
                   </>
                 ) : (
                   <>
-                    <AuthForm 
-                      isLogin={showLogin} 
-                      onSuccess={handleAuthSuccess} 
+                    <AuthForm
+                      isLogin={showLogin}
+                      onSuccess={handleAuthSuccess}
                     />
                     <button onClick={toggleAuthMode}>
                       {showLogin ? 'Нажми для регистрации' : 'Уже есть аккаунт?'}
