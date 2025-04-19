@@ -45,6 +45,18 @@ export const deleteFeedback = createAsyncThunk(
   }
 );
 
+export const blockFeedback = createAsyncThunk(
+  'feedbacks/block',
+  async ({ id, isBlocked }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(`${API_URL}/${id}`, { isBlocked });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 const initialState = {
   items: [],
   loading: false,
@@ -74,6 +86,12 @@ const feedbackSlice = createSlice({
       })
       .addCase(deleteFeedback.fulfilled, (state, action) => {
         state.items = state.items.filter(item => item.id !== action.payload);
+      })
+      .addCase(blockFeedback.fulfilled, (state, action) => {
+        const index = state.items.findIndex(item => item.id === action.payload.id);
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
       });
   }
 });

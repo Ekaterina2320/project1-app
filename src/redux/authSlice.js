@@ -14,8 +14,14 @@ export const registerUser = createAsyncThunk(
         return rejectWithValue('Пользователь с таким email уже существует');
       }
 
-      // Создаем нового пользователя
-      const newUserResponse = await axios.post(API_URL, userData);
+      // Создаем нового пользователя с ролью по умолчанию
+      const newUser = {
+        ...userData,
+        role: 'user', // Устанавливаем роль по умолчанию
+        isBlocked: false // Добавляем статус блокировки
+      };
+
+      const newUserResponse = await axios.post(API_URL, newUser);
       return newUserResponse.data;
     } catch (error) {
       return rejectWithValue(error.message);
@@ -29,8 +35,10 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}?email=${credentials.email}`);
-      if (response.data.length === 0 || response.data[0].password !== credentials.password) {
-        return rejectWithValue('Неверный email или пароль');
+      if (response.data.length === 0 ||
+          response.data[0].password !== credentials.password ||
+          response.data[0].isBlocked) {
+        return rejectWithValue('Неверный email или пароль, либо пользователь заблокирован');
       }
       return response.data[0];
     } catch (error) {
@@ -49,13 +57,14 @@ export const updateUser = createAsyncThunk(
 
       // Сохраняем важные поля, которые не должны изменяться
       const updatedUser = {
-        ...currentUser, // сохраняем текущие данные
-        ...userData,   // применяем новые данные
-        password: userData.password || currentUser.password, // сохраняем пароль
-        id: currentUser.id // гарантируем сохранение id
+        ...currentUser,
+        ...userData,
+        password: userData.password || currentUser.password,
+        id: currentUser.id,
+        role: currentUser.role,
+        isBlocked: currentUser.isBlocked
       };
 
-      // Обновляем пользователя на сервере
       const response = await axios.put(`${API_URL}/${currentUser.id}`, updatedUser);
       return response.data;
     } catch (error) {
@@ -64,13 +73,71 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-// ... (остальная часть slice остается без изменений)
+// Асинхронное действие для получения списка пользователей
+export const fetchUsers = createAsyncThunk(
+  'auth/fetchUsers',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(API_URL);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Асинхронное действие для изменения роли пользователя
+export const updateUserRole = createAsyncThunk(
+  'auth/updateRole',
+  async ({ userId, newRole }, { rejectWithValue }) => {
+    try {
+      const userResponse = await axios.get(`${API_URL}/${userId}`);
+      const updatedUser = {
+        ...userResponse.data,
+        role: newRole
+      };
+      const response = await axios.put(`${API_URL}/${userId}`, updatedUser);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Асинхронное действие для удаления пользователя
+export const deleteUser = createAsyncThunk(
+  'auth/deleteUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      await axios.delete(`${API_URL}/${userId}`);
+      return userId;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Асинхронное действие для блокировки/разблокировки пользователя
+export const blockUser = createAsyncThunk(
+  'auth/blockUser',
+  async ({ userId, isBlocked }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(`${API_URL}/${userId}`, { isBlocked });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
 
 const initialState = {
   currentUser: null,
   isAuthenticated: false,
   isLoading: false,
   error: null,
+  users: [],
+  usersLoading: false,
+  usersError: null,
   registeredUsers: JSON.parse(localStorage.getItem('registeredUsers')) || []
 };
 
@@ -86,7 +153,6 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
-    // Синхронный редьюсер для обновления данных в localStorage
     updateLocalUser: (state, action) => {
       if (state.currentUser) {
         state.currentUser = { ...state.currentUser, ...action.payload };
@@ -138,8 +204,6 @@ const authSlice = createSlice({
       .addCase(updateUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentUser = action.payload;
-
-        // Обновляем пользователя в списке зарегистрированных
         const userIndex = state.registeredUsers.findIndex(
           user => user.id === action.payload.id
         );
@@ -147,12 +211,88 @@ const authSlice = createSlice({
           state.registeredUsers[userIndex] = action.payload;
           localStorage.setItem('registeredUsers', JSON.stringify(state.registeredUsers));
         }
-
         localStorage.setItem('currentUser', JSON.stringify(action.payload));
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
+      })
+
+      // Обработчики для получения списка пользователей
+      .addCase(fetchUsers.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
+      })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.usersLoading = false;
+        state.users = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.usersLoading = false;
+        state.usersError = action.payload;
+      })
+
+      // Обработчики для изменения роли пользователя
+      .addCase(updateUserRole.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
+      })
+      .addCase(updateUserRole.fulfilled, (state, action) => {
+        state.usersLoading = false;
+        const userIndex = state.users.findIndex(user => user.id === action.payload.id);
+        if (userIndex !== -1) {
+          state.users[userIndex] = action.payload;
+        }
+        if (state.currentUser?.id === action.payload.id) {
+          state.currentUser = action.payload;
+          localStorage.setItem('currentUser', JSON.stringify(action.payload));
+        }
+      })
+      .addCase(updateUserRole.rejected, (state, action) => {
+        state.usersLoading = false;
+        state.usersError = action.payload;
+      })
+
+      // Обработчики для удаления пользователя
+      .addCase(deleteUser.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
+      })
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.usersLoading = false;
+        state.users = state.users.filter(user => user.id !== action.payload);
+        state.registeredUsers = state.registeredUsers.filter(user => user.id !== action.payload);
+        if (state.currentUser?.id === action.payload) {
+          state.currentUser = null;
+          state.isAuthenticated = false;
+          localStorage.removeItem('currentUser');
+        }
+        localStorage.setItem('registeredUsers', JSON.stringify(state.registeredUsers));
+      })
+      .addCase(deleteUser.rejected, (state, action) => {
+        state.usersLoading = false;
+        state.usersError = action.payload;
+      })
+
+      // Обработчики для блокировки пользователя
+      .addCase(blockUser.pending, (state) => {
+        state.usersLoading = true;
+        state.usersError = null;
+      })
+      .addCase(blockUser.fulfilled, (state, action) => {
+        state.usersLoading = false;
+        const userIndex = state.users.findIndex(u => u.id === action.payload.id);
+        if (userIndex !== -1) {
+          state.users[userIndex] = action.payload;
+        }
+        if (state.currentUser?.id === action.payload.id) {
+          state.currentUser = action.payload;
+          localStorage.setItem('currentUser', JSON.stringify(action.payload));
+        }
+      })
+      .addCase(blockUser.rejected, (state, action) => {
+        state.usersLoading = false;
+        state.usersError = action.payload;
       });
   }
 });

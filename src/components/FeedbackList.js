@@ -11,6 +11,8 @@ const FeedbackList = () => {
     dispatch(fetchFeedbacks());
   }, [dispatch]);
 
+  const activeFeedbacks = feedbacks.filter(fb => !fb.isBlocked);
+
   const handleDelete = async (id, userId) => {
     if (currentUser && (currentUser.id === userId || currentUser.isAdmin)) {
       if (window.confirm('Вы уверены, что хотите удалить этот отзыв?')) {
@@ -29,7 +31,7 @@ const FeedbackList = () => {
         <p className="no-feedbacks">Пока нет отзывов. Будьте первым!</p>
       ) : (
         <div className="feedback-list">
-          {feedbacks.map((feedback) => (
+          {activeFeedbacks.map((feedback) => (
             <div key={feedback.id} className="feedback-item">
               <div className="feedback-header">
                 <h3 className="feedback-author">{feedback.author}</h3>

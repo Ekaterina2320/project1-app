@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { Container as MuiContainer, Grid, CssBaseline, Drawer } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,6 +15,8 @@ import Menu from './components/Menu';
 import Content from './components/Content';
 import Navbar from './components/Navbar';
 import Container from './components/Container';
+import AdminDashboard from './pages/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
 import Button from './components/Button';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -75,7 +77,7 @@ const App = () => {
 
           <Grid container spacing={2}>
             <Grid item xs={12} md={3}>
-              <button onClick={() => setMenuOpen(true)}>Open Menu</button>
+              <button onClick={() => setMenuOpen(true)}>Открыть меню</button>
             </Grid>
             <Grid item xs={12} md={9}>
               <Container>
@@ -103,6 +105,11 @@ const App = () => {
                     <Route path="/lab/:id" element={<Content />} />
                     <Route path="/about" element={<About />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/admin" element={
+                      <ProtectedRoute adminOnly>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } />
                   </Routes>
                 </div>
                 <Counter />

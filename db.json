@@ -5,14 +5,26 @@
       "email": "katya@gmail.com",
       "password": "123456",
       "name": "Катя Какатя",
-      "confirmPassword": "123456"
+      "confirmPassword": "123456",
+      "role": "admin",
+      "isBlocked": false
     },
     {
       "id": "533a",
       "email": "7@mail.ru",
       "password": "admin7",
       "name": "7",
-      "confirmPassword": "admin7"
+      "confirmPassword": "admin7",
+      "role": "admin"
+    },
+    {
+      "id": "77eb",
+      "email": "haker@mail.ru",
+      "password": "haker0",
+      "name": "haker",
+      "confirmPassword": "haker0",
+      "role": "user",
+      "isBlocked": false
     }
   ],
   "feedbacks": [
@@ -22,7 +34,8 @@
       "message": "Очень очень хороший сайт!!!!!!!!!!!!!!!!!!!!!!!!!!",
       "author": "Катя",
       "userId": "322f",
-      "date": "2025-04-17T16:43:06.364Z"
+      "date": "2025-04-17T16:43:06.364Z",
+      "isBlocked": false
     },
     {
       "id": "3235",
@@ -30,7 +43,8 @@
       "message": "ПРОСТО УЖАСНЫЙ САЙТ",
       "author": "Маша",
       "userId": "7e9b",
-      "date": "2025-04-17T16:43:52.812Z"
+      "date": "2025-04-17T16:43:52.812Z",
+      "isBlocked": false
     },
     {
       "id": "dbf2",
@@ -38,7 +52,8 @@
       "message": "Наш проект позволит утилизировать мусор правильно",
       "author": "7",
       "userId": "533a",
-      "date": "2025-04-18T13:29:29.234Z"
+      "date": "2025-04-18T13:29:29.234Z",
+      "isBlocked": false
     },
     {
       "id": "d54d",
@@ -46,7 +61,8 @@
       "message": "чудо чудное",
       "author": "7",
       "userId": "533a",
-      "date": "2025-04-18T16:08:39.745Z"
+      "date": "2025-04-18T16:08:39.745Z",
+      "isBlocked": false
     },
     {
       "id": "4cd4",
@@ -54,15 +70,8 @@
       "message": "НАш Отзыв",
       "author": "7",
       "userId": "533a",
-      "date": "2025-04-18T16:40:26.676Z"
-    },
-    {
-      "id": "4f59",
-      "title": "вм ав",
-      "message": "вмва",
-      "author": "7",
-      "userId": "533a",
-      "date": "2025-04-18T18:10:08.386Z"
+      "date": "2025-04-18T16:40:26.676Z",
+      "isBlocked": false
     }
   ]
 }
