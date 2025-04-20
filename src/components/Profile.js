@@ -1,29 +1,3 @@
-// import React from 'react';
-// import { useDispatch, useSelector } from 'react-redux';
-// import { logoutUser } from '../redux/authSlice';
-
-// const Profile = () => {
-//   const dispatch = useDispatch();
-//   const currentUser = useSelector(state => state.auth.currentUser);
-
-//   const handleLogout = () => {
-//     dispatch(logoutUser());
-//     localStorage.removeItem('currentUser');
-//   };
-
-//   return (
-//     <div className="profile">
-//       <h2>Добро пожаловать, {currentUser?.name}</h2>
-//       <p>Email: {currentUser?.email}</p>
-//       <button onClick={handleLogout} className="logout-btn">
-//         Выйти
-//       </button>
-//     </div>
-//   );
-// };
-
-// export default Profile;
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
@@ -31,9 +5,14 @@ import { updateUser, logoutUser } from '../redux/authSlice';
 import { TextField, Button, Box, Typography, Paper } from '@mui/material';
 
 const Profile = () => {
+  // Получаем dispatch для отправки действий в Redux store
   const dispatch = useDispatch();
+  // Получаем текущего пользователя из Redux store
   const { currentUser } = useSelector(state => state.auth);
+  // Состояние для переключения между режимами просмотра и редактирования
   const [isEditing, setIsEditing] = useState(false);
+
+  // Инициализация react-hook-form с дефолтными значениями из currentUser
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       name: currentUser?.name || '',
@@ -41,31 +20,36 @@ const Profile = () => {
     }
   });
 
+  // Обработчик отправки формы редактирования
   const onSubmit = async (data) => {
     try {
-      // Передаем только те данные, которые можно изменять
+      // Отправляем действие обновления пользователя с новыми данными
       await dispatch(updateUser({
         name: data.name,
         email: data.email
         // Пароль не изменяем через эту форму
-      })).unwrap();
+      })).unwrap(); // unwrap() для обработки Promise
+      // Выходим из режима редактирования после успешного обновления
       setIsEditing(false);
     } catch (error) {
       console.error('Ошибка при обновлении профиля:', error);
     }
   };
 
+  // Обработчик выхода из системы
   const handleLogout = () => {
     dispatch(logoutUser());
   };
 
   return (
+    // Контейнер профиля
     <Paper elevation={3} sx={{ p: 3, maxWidth: 600, mx: 'auto', mt: 4 }}>
       <Typography variant="h5" gutterBottom>
         Профиль пользователя
       </Typography>
 
       {isEditing ? (
+        // Форма редактирования профиля
         <form onSubmit={handleSubmit(onSubmit)}>
           <Box mb={2}>
             <TextField
@@ -111,6 +95,7 @@ const Profile = () => {
           </Box>
         </form>
       ) : (
+        // Режим просмотра профиля
         <>
           <Typography variant="body1" paragraph>
             <strong>Имя:</strong> {currentUser?.name}

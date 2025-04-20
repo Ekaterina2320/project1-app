@@ -4,12 +4,13 @@ import FeedbackForm from './FeedbackForm';
 import FeedbackList from './FeedbackList';
 
 const Footer = () => {
+  // Состояния для управления видимостью модальных окон
   const [feedbackFormOpen, setFeedbackFormOpen] = useState(false);
   const [feedbackListOpen, setFeedbackListOpen] = useState(false);
-
+  // Обработчики открытия/закрытия модального окна формы отзыва
   const handleFeedbackFormOpen = () => setFeedbackFormOpen(true);
   const handleFeedbackFormClose = () => setFeedbackFormOpen(false);
-
+  // Обработчики открытия/закрытия модального окна списка отзывов
   const handleFeedbackListOpen = () => setFeedbackListOpen(true);
   const handleFeedbackListClose = () => setFeedbackListOpen(false);
 
@@ -32,8 +33,8 @@ const Footer = () => {
 
       {/* Modal для формы обратной связи */}
       <Modal
-        open={feedbackFormOpen}
-        onClose={handleFeedbackFormClose}
+        open={feedbackFormOpen} // Управление видимостью
+        onClose={handleFeedbackFormClose} // Обработчик закрытия
         aria-labelledby="feedback-form-modal-title"
         aria-describedby="feedback-form-modal-description"
       >

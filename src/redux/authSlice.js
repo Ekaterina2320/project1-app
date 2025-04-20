@@ -20,7 +20,7 @@ export const registerUser = createAsyncThunk(
         role: 'user', // Устанавливаем роль по умолчанию
         isBlocked: false // Добавляем статус блокировки
       };
-
+      // Отправка запроса на создание пользователя
       const newUserResponse = await axios.post(API_URL, newUser);
       return newUserResponse.data;
     } catch (error) {
@@ -35,6 +35,10 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.get(`${API_URL}?email=${credentials.email}`);
+      // Проверки перед авторизацией:
+      // 1. Пользователь существует
+      // 2. Пароль верный
+      // 3. Пользователь не заблокирован
       if (response.data.length === 0 ||
           response.data[0].password !== credentials.password ||
           response.data[0].isBlocked) {
@@ -59,12 +63,12 @@ export const updateUser = createAsyncThunk(
       const updatedUser = {
         ...currentUser,
         ...userData,
-        password: userData.password || currentUser.password,
-        id: currentUser.id,
-        role: currentUser.role,
-        isBlocked: currentUser.isBlocked
+        password: userData.password || currentUser.password, // Пароль остается прежним, если не указан новый
+        id: currentUser.id, // ID не меняется
+        role: currentUser.role, // Роль не меняется
+        isBlocked: currentUser.isBlocked // Статус блокировки не меняется
       };
-
+      // Отправка запроса на обновление
       const response = await axios.put(`${API_URL}/${currentUser.id}`, updatedUser);
       return response.data;
     } catch (error) {
@@ -73,7 +77,7 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-// Асинхронное действие для получения списка пользователей
+// Асинхронное действие для получения списка пользователей (админ)
 export const fetchUsers = createAsyncThunk(
   'auth/fetchUsers',
   async (_, { rejectWithValue }) => {
@@ -86,16 +90,19 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
-// Асинхронное действие для изменения роли пользователя
+// Асинхронное действие для изменения роли пользователя (админ)
 export const updateUserRole = createAsyncThunk(
   'auth/updateRole',
   async ({ userId, newRole }, { rejectWithValue }) => {
     try {
+    // Получаем текущие данные пользователя
       const userResponse = await axios.get(`${API_URL}/${userId}`);
+      // Создаем обновленного пользователя с новой ролью
       const updatedUser = {
         ...userResponse.data,
         role: newRole
       };
+      // Отправляем обновленные данные
       const response = await axios.put(`${API_URL}/${userId}`, updatedUser);
       return response.data;
     } catch (error) {
@@ -104,24 +111,25 @@ export const updateUserRole = createAsyncThunk(
   }
 );
 
-// Асинхронное действие для удаления пользователя
+// Асинхронное действие для удаления пользователя (админ)
 export const deleteUser = createAsyncThunk(
   'auth/deleteUser',
   async (userId, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/${userId}`);
-      return userId;
+      return userId; // Возвращаем ID удаленного пользователя
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Асинхронное действие для блокировки/разблокировки пользователя
+// Асинхронное действие для блокировки/разблокировки пользователя (админ)
 export const blockUser = createAsyncThunk(
   'auth/blockUser',
   async ({ userId, isBlocked }, { rejectWithValue }) => {
     try {
+      // Отправляем PATCH запрос для изменения статуса блокировки
       const response = await axios.patch(`${API_URL}/${userId}`, { isBlocked });
       return response.data;
     } catch (error) {
@@ -140,19 +148,22 @@ const initialState = {
   usersError: null,
   registeredUsers: JSON.parse(localStorage.getItem('registeredUsers')) || []
 };
-
+// Создание Redux slice для управления состоянием аутентификации
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+  // Действие для выхода пользователя
     logoutUser: (state) => {
       state.currentUser = null;
       state.isAuthenticated = false;
       localStorage.removeItem('currentUser');
     },
+    // Действие для очистки ошибок
     clearError: (state) => {
       state.error = null;
     },
+    // Действие для локального обновления данных пользователя (без запроса к API)
     updateLocalUser: (state, action) => {
       if (state.currentUser) {
         state.currentUser = { ...state.currentUser, ...action.payload };
@@ -204,6 +215,7 @@ const authSlice = createSlice({
       .addCase(updateUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.currentUser = action.payload;
+        // Обновляем пользователя в списке зарегистрированных
         const userIndex = state.registeredUsers.findIndex(
           user => user.id === action.payload.id
         );
@@ -243,6 +255,7 @@ const authSlice = createSlice({
         if (userIndex !== -1) {
           state.users[userIndex] = action.payload;
         }
+        // Если это текущий пользователь - обновляем и его данные
         if (state.currentUser?.id === action.payload.id) {
           state.currentUser = action.payload;
           localStorage.setItem('currentUser', JSON.stringify(action.payload));
@@ -260,8 +273,10 @@ const authSlice = createSlice({
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.usersLoading = false;
+        // Удаляем пользователя из всех списков
         state.users = state.users.filter(user => user.id !== action.payload);
         state.registeredUsers = state.registeredUsers.filter(user => user.id !== action.payload);
+        // Если это текущий пользователь - разлогиниваем
         if (state.currentUser?.id === action.payload) {
           state.currentUser = null;
           state.isAuthenticated = false;
@@ -281,10 +296,12 @@ const authSlice = createSlice({
       })
       .addCase(blockUser.fulfilled, (state, action) => {
         state.usersLoading = false;
+        // Обновляем пользователя в общем списке
         const userIndex = state.users.findIndex(u => u.id === action.payload.id);
         if (userIndex !== -1) {
           state.users[userIndex] = action.payload;
         }
+        // Если это текущий пользователь - обновляем и его данные
         if (state.currentUser?.id === action.payload.id) {
           state.currentUser = action.payload;
           localStorage.setItem('currentUser', JSON.stringify(action.payload));

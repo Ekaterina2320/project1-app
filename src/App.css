@@ -415,7 +415,6 @@ body.dark {
 .feedback-delete-btn:active {
   transform: translateY(0);
 }
-
 /* Профиль пользователя */
 .profile-container {
   position: absolute;
@@ -513,4 +512,48 @@ body.dark {
     justify-content: center;
   }
 }
+@media (max-width: 768px) {
+  /* Фиксация первой колонки */
+  th:first-child,
+  td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: var(--bg-primary);
+    z-index: 1;
+    min-width: 100px; /* Минимальная ширина первой колонки */
+  }
 
+  /* Остальные колонки */
+  th:not(:first-child),
+  td:not(:first-child) {
+    min-width: 150px; /* Минимальная ширина остальных колонок */
+  }
+
+  /* Горизонтальный скролл для tbody */
+  tbody {
+    display: block;
+    overflow-x: auto;
+  }
+
+  thead,
+  tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+  }
+}
+/* Стили для таблицы */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+  word-wrap: break-word; /* Перенос текста */
+  white-space: normal; /* Разрешить перенос строк */
+  overflow: hidden;
+}

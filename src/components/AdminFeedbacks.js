@@ -6,30 +6,33 @@ import {
   flexRender,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import { fetchUsers, deleteUser, updateUserRole, blockUser } from '../redux/authSlice';
+import {
+  fetchFeedbacks,
+  deleteFeedback,
+  blockFeedback,
+} from '../redux/feedbackSlice';
 import { Paper, Typography, Box, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
-import AdminPanelIcon from '@mui/icons-material/AdminPanelSettings';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
 // Компонент для перетаскиваемых заголовков
 const DraggableHeader = ({ header, moveColumn }) => {
   const ref = React.useRef(null);
-  // Настройка drop-зоны для перетаскивания колонок
+// Используем хук `useDrop` для обработки перетаскивания колонок
   const [, drop] = useDrop({
-    accept: 'column',
+    accept: 'column', // Тип элемента, который можно перетаскивать
     hover(item) {
       if (!ref.current) return;
-      const dragIndex = item.index;
-      const hoverIndex = header.index;
-      if (dragIndex === hoverIndex) return;
-      moveColumn(dragIndex, hoverIndex);
-      item.index = hoverIndex;
+      const dragIndex = item.index; // Индекс перетаскиваемой колонки
+      const hoverIndex = header.index; // Индекс колонки, над которой находится курсор
+      if (dragIndex === hoverIndex) return; // Если индексы совпадают, ничего не делаем
+      moveColumn(dragIndex, hoverIndex); // Перемещаем колонку
+      item.index = hoverIndex; // Обновляем индекс перетаскиваемого элемента
     },
   });
-  // Настройка drag-источника для перетаскивания колонок
+ // Используем хук `useDrag` для перетаскивания
   const [{ isDragging }, drag] = useDrag({
     type: 'column',
     item: { index: header.index },
@@ -37,7 +40,7 @@ const DraggableHeader = ({ header, moveColumn }) => {
       isDragging: monitor.isDragging(),
     }),
   });
-  // Объединяем drag и drop функционал
+// Привязываем перетаскивание и сброс к элементу
   drag(drop(ref));
 
   return (
@@ -45,89 +48,84 @@ const DraggableHeader = ({ header, moveColumn }) => {
       ref={ref}
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: header.column.getCanSort() ? 'pointer' : 'move', // Указатель для сортировки или перетаскивания
+        cursor: header.column.getCanSort() ? 'pointer' : 'move',
         padding: '12px',
         borderBottom: '2px solid #ddd',
         textAlign: 'left',
         backgroundColor: '#f5f5f5',
       }}
-      onClick={header.column.getToggleSortingHandler()} // Обработчик клика для сортировки
+      onClick={header.column.getToggleSortingHandler()}
     >
       {flexRender(header.column.columnDef.header, header.getContext())}
       {{
         asc: ' 🔼',
         desc: ' 🔽',
-      }[header.column.getIsSorted()] ?? null} {/* Отображение значков сортировки */}
+      }[header.column.getIsSorted()] ?? null}
     </th>
   );
 };
-/* Компонент таблицы управления пользователями для администратора*/
-const AdminUsersTable = () => {
+// Основной компонент для управления отзывами
+const AdminFeedbacks = () => {
   const dispatch = useDispatch();
-  const { users, loading, error } = useSelector((state) => state.auth);
-  const { currentUser } = useSelector((state) => state.auth);
-  const [sorting, setSorting] = useState([]); // Состояние для сортировки
+  const { items: feedbacks, loading, error } = useSelector((state) => state.feedbacks);
+  const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState(
-    ['id', 'name', 'email', 'role', 'isBlocked', 'actions'] // Изначальный порядок колонок
+    ['id', 'author', 'title', 'message', 'date', 'isBlocked', 'actions']
   );
 
   useEffect(() => {
-    dispatch(fetchUsers());
-  }, [dispatch]);
-  /**
-   * Обработчик удаления пользователя
-   * @param {string} userId - ID пользователя
-   */
-  const handleDelete = (userId) => {
-    if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      dispatch(deleteUser(userId));
+    if (!feedbacks || feedbacks.length === 0) {
+      dispatch(fetchFeedbacks());// Загружаем отзывы, если их нет в состоянии
+    }
+  }, [dispatch]); // Только dispatch в зависимостях
+// Функция для удаления отзыва
+  const handleDelete = (id) => {
+    if (window.confirm('Вы уверены, что хотите удалить этот отзыв?')) {
+      dispatch(deleteFeedback(id));
     }
   };
-  /**
-   * Обработчик блокировки/разблокировки пользователя
-   * @param {string} userId - ID пользователя
-   * @param {boolean} isBlocked - Новый статус блокировки
-   */
-  const handleBlock = (userId, isBlocked) => {
-    dispatch(blockUser({ userId, isBlocked }));
+// Функция для блокировки/разблокировки отзыва
+  const handleBlock = (id, isBlocked) => {
+    dispatch(blockFeedback({ id, isBlocked }));
   };
-  /**
-   * Обработчик изменения роли пользователя
-   * @param {string} userId - ID пользователя
-   * @param {string} newRole - Новая роль ('admin' или 'user')
-   */
-  const handleChangeRole = (userId, newRole) => {
-    dispatch(updateUserRole({ userId, newRole }));
-  };
-
+// Определение колонок таблицы
   const columns = [
     {
       accessorKey: 'id',
       header: 'ID',
-      enableSorting: true, // Включаем сортировку
-    },
-    {
-      accessorKey: 'name',
-      header: 'Имя',
       enableSorting: true,
     },
     {
-      accessorKey: 'email',
-      header: 'Email',
+      accessorKey: 'author',
+      header: 'Автор',
       enableSorting: true,
     },
     {
-      accessorKey: 'role',
-      header: 'Роль',
-      // Кастомное отображение ячейки для роли
+      accessorKey: 'title',
+      header: 'Заголовок',
+      enableSorting: true,
+    },
+    {
+      accessorKey: 'message',
+      header: 'Сообщение',
       cell: ({ getValue }) => (
-        <span
-          style={{
-            color: getValue() === 'admin' ? 'red' : 'green',
-            fontWeight: 'bold',
-          }}
-        >
+        <div style={{ maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {getValue()}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'date',
+      header: 'Дата',
+      cell: ({ getValue }) => (
+        <span>
+          {new Date(getValue()).toLocaleString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </span>
       ),
       enableSorting: true,
@@ -135,7 +133,6 @@ const AdminUsersTable = () => {
     {
       accessorKey: 'isBlocked',
       header: 'Статус',
-      // Кастомное отображение статуса блокировки
       cell: ({ getValue }) => (
         <span
           style={{
@@ -150,60 +147,44 @@ const AdminUsersTable = () => {
     },
     {
       header: 'Действия',
-      // Кастомное отображение кнопок действий
       cell: ({ row }) => (
         <div style={{ display: 'flex', gap: '8px' }}>
-          {/* Кнопка удаления */}
-          <IconButton
-            color="error"
-            onClick={() => handleDelete(row.original.id)}
-            disabled={row.original.id === currentUser?.id}
-          >
+        {/* Кнопка блокировки/разблокировки отзыва */}
+          <IconButton color="error" onClick={() => handleDelete(row.original.id)}>
             <DeleteIcon />
           </IconButton>
-          {/* Кнопка блокировки/разблокировки */}
           <IconButton
             color={row.original.isBlocked ? 'success' : 'warning'}
             onClick={() => handleBlock(row.original.id, !row.original.isBlocked)}
-            disabled={row.original.id === currentUser?.id}
           >
             <BlockIcon />
           </IconButton>
-          {/* Кнопка изменения роли */}
-          {row.original.role !== 'admin' && (
-            <IconButton
-              color="primary"
-              onClick={() => handleChangeRole(row.original.id, 'admin')}
-            >
-              <AdminPanelIcon />
-            </IconButton>
-          )}
         </div>
       ),
     },
   ];
-// Создание экземпляра таблицы с помощью react-table
+// Настройка таблицы
   const table = useReactTable({
-    data: users || [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), // Добавляем сортировку
+    data: feedbacks || [], // Данные для таблицы
+    columns, // Определенные колонки
+    getCoreRowModel: getCoreRowModel(), // Модель для получения строк
+    getSortedRowModel: getSortedRowModel(), // Модель для сортировки строк
     state: {
-      sorting, // Состояние сортировки
-      columnOrder, // Порядок колонок
+      sorting, // Текущая сортировка
+      columnOrder, // Текущий порядок колонок
     },
     onSortingChange: setSorting, // Обновление состояния сортировки
     onColumnOrderChange: setColumnOrder, // Обновление порядка колонок
   });
 
-  if (loading) return <Typography>Загрузка пользователей...</Typography>;
+  if (loading) return <Typography>Загрузка отзывов...</Typography>;
   if (error) return <Typography color="error">Ошибка: {error}</Typography>;
 
   return (
     <DndProvider backend={HTML5Backend}>
       <Paper elevation={3} sx={{ p: 3, maxWidth: 1200, mx: 'auto', mt: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
-          Управление пользователями
+          Управление отзывами
         </Typography>
         <Box sx={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -215,7 +196,6 @@ const AdminUsersTable = () => {
                       key={header.id}
                       header={header}
                       moveColumn={(dragIndex, hoverIndex) => {
-                        // Логика изменения порядка колонок
                         const newOrder = [...columnOrder];
                         const [removed] = newOrder.splice(dragIndex, 1);
                         newOrder.splice(hoverIndex, 0, removed);
@@ -226,7 +206,6 @@ const AdminUsersTable = () => {
                 </tr>
               ))}
             </thead>
-            {/* Тело таблицы */}
             <tbody>
               {table.getRowModel().rows.map((row) => (
                 <tr key={row.id}>
@@ -238,6 +217,7 @@ const AdminUsersTable = () => {
                         borderBottom: '1px solid #ddd',
                       }}
                     >
+                      {/* Отображаем содержимое ячеек */}
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
@@ -251,4 +231,4 @@ const AdminUsersTable = () => {
   );
 };
 
-export default AdminUsersTable;
+export default AdminFeedbacks;

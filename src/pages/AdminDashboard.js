@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, Tab, Box } from '@mui/material';
 import AdminUsersTable from '../components/AdminUsersTable';
-import AdminFeedbacks from './AdminFeedbacks';
+import AdminFeedbacks from '../components/AdminFeedbacks';
 import { Paper, Typography } from '@mui/material';
 
 const AdminDashboard = () => {

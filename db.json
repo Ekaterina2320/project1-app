@@ -25,6 +25,24 @@
       "confirmPassword": "haker0",
       "role": "user",
       "isBlocked": false
+    },
+    {
+      "id": "c01d",
+      "email": "haker2@mail.ru",
+      "password": "haker2",
+      "name": "haker2",
+      "confirmPassword": "haker2",
+      "role": "user",
+      "isBlocked": true
+    },
+    {
+      "id": "d560",
+      "email": "haker3@mail.ru",
+      "password": "haker3",
+      "name": "haker3",
+      "confirmPassword": "haker3",
+      "role": "user",
+      "isBlocked": false
     }
   ],
   "feedbacks": [
@@ -65,13 +83,29 @@
       "isBlocked": false
     },
     {
-      "id": "4cd4",
-      "title": "Отзыв",
-      "message": "НАш Отзыв",
-      "author": "7",
-      "userId": "533a",
-      "date": "2025-04-18T16:40:26.676Z",
-      "isBlocked": false
+      "id": "1b2d",
+      "title": "Отзыв на сайт",
+      "message": "Ну хороший!",
+      "author": "haker2",
+      "userId": "c01d",
+      "date": "2025-04-20T10:12:16.587Z"
+    },
+    {
+      "id": "8c51",
+      "title": "Фи ",
+      "message": "Фи, хороший тут только я",
+      "author": "haker3",
+      "userId": "d560",
+      "date": "2025-04-20T10:13:21.874Z",
+      "isBlocked": true
+    },
+    {
+      "id": "dfbb",
+      "title": "Фи2",
+      "message": "Хотя, не хороший, а лучший",
+      "author": "haker3",
+      "userId": "d560",
+      "date": "2025-04-20T10:13:36.218Z"
     }
   ]
 }

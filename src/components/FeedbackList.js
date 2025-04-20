@@ -13,14 +13,6 @@ const FeedbackList = () => {
 
   const activeFeedbacks = feedbacks.filter(fb => !fb.isBlocked);
 
-  const handleDelete = async (id, userId) => {
-    if (currentUser && (currentUser.id === userId || currentUser.isAdmin)) {
-      if (window.confirm('Вы уверены, что хотите удалить этот отзыв?')) {
-        await dispatch(deleteFeedback(id));
-      }
-    }
-  };
-
   if (loading) return <div className="loading">Загрузка отзывов...</div>;
   if (error) return <div className="error">Ошибка: {error}</div>;
 
@@ -47,15 +39,6 @@ const FeedbackList = () => {
               </div>
               <h4 className="feedback-title">{feedback.title}</h4>
               <p className="feedback-text">{feedback.message}</p>
-              {currentUser && (currentUser.id === feedback.userId || currentUser.isAdmin) && (
-                <button
-                  className="feedback-delete-btn"
-                  onClick={() => handleDelete(feedback.id, feedback.userId)}
-                  aria-label="Удалить отзыв"
-                >
-                  Удалить
-                </button>
-              )}
               <div className="feedback-divider"></div>
             </div>
           ))}
