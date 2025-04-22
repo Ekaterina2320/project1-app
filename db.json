@@ -33,7 +33,7 @@
       "name": "haker2",
       "confirmPassword": "haker2",
       "role": "user",
-      "isBlocked": true
+      "isBlocked": false
     },
     {
       "id": "d560",
@@ -91,21 +91,28 @@
       "date": "2025-04-20T10:12:16.587Z"
     },
     {
-      "id": "8c51",
-      "title": "Фи ",
-      "message": "Фи, хороший тут только я",
-      "author": "haker3",
-      "userId": "d560",
-      "date": "2025-04-20T10:13:21.874Z",
-      "isBlocked": true
-    },
-    {
       "id": "dfbb",
       "title": "Фи2",
       "message": "Хотя, не хороший, а лучший",
       "author": "haker3",
       "userId": "d560",
       "date": "2025-04-20T10:13:36.218Z"
+    },
+    {
+      "id": "42b4",
+      "title": "cs",
+      "message": "csd",
+      "author": "7",
+      "userId": "533a",
+      "date": "2025-04-22T18:04:56.702Z"
+    },
+    {
+      "id": "9e61",
+      "title": "Конец!",
+      "message": "Спасибо! ",
+      "author": "7",
+      "userId": "533a",
+      "date": "2025-04-22T18:07:35.987Z"
     }
   ]
 }

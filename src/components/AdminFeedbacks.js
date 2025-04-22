@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  useGetFeedbacksQuery,
   useDeleteFeedbackMutation,
   useBlockFeedbackMutation,
 } from '../redux/apiSlice';
@@ -12,7 +11,7 @@ import {
   flexRender,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import { Paper, Typography, Box, IconButton } from '@mui/material';
+import { Paper, Typography, Box, IconButton, CircularProgress, Alert  } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
@@ -64,14 +63,13 @@ const DraggableHeader = ({ header, moveColumn }) => {
   );
 };
 
-const AdminFeedbacks = () => {
+const AdminFeedbacks = ({ feedbacks, isLoading, isError, error }) => {
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState(
     ['id', 'author', 'title', 'message', 'date', 'isBlocked', 'actions']
   );
 
-  // Используем RTK Query хуки
-  const { data: feedbacks = [], isLoading, isError, error } = useGetFeedbacksQuery();
+  // Используем RTK Query для спин. загрузки
   const [deleteFeedback] = useDeleteFeedbackMutation();
   const [blockFeedback] = useBlockFeedbackMutation();
 
@@ -180,8 +178,21 @@ const AdminFeedbacks = () => {
     onColumnOrderChange: setColumnOrder,
   });
 
-  if (isLoading) return <Typography>Загрузка отзывов...</Typography>;
-  if (isError) return <Typography color="error">Ошибка: {error.toString()}</Typography>;
+   if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Alert severity="error" sx={{ mb: 3 }}>
+        {error?.data?.message || error?.message || 'Ошибка загрузки отзывов'}
+      </Alert>
+    );
+  }
 
   return (
     <DndProvider backend={HTML5Backend}>

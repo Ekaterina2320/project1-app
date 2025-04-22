@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
-  useGetUsersQuery,
   useDeleteUserMutation,
   useUpdateUserRoleMutation,
   useBlockUserMutation,
@@ -13,7 +12,7 @@ import {
   flexRender,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import { Paper, Typography, Box, IconButton } from '@mui/material';
+import { Paper, Typography, Box, IconButton, CircularProgress, Alert  } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
 import AdminPanelIcon from '@mui/icons-material/AdminPanelSettings';
@@ -65,21 +64,18 @@ const DraggableHeader = ({ header, moveColumn }) => {
     </th>
   );
 };
-
-const AdminUsersTable = () => {
+// Изменения для спиннера загрузки
+const AdminUsersTable = ({ users, isLoading, isError, error }) => {
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState(
     ['id', 'name', 'email', 'role', 'isBlocked', 'actions']
   );
 
   const { currentUser } = useSelector((state) => state.auth);
-
-  // Используем RTK Query хуки
-  const { data: users = [], isLoading, isError, error } = useGetUsersQuery();
   const [deleteUser] = useDeleteUserMutation();
   const [updateUserRole] = useUpdateUserRoleMutation();
   const [blockUser] = useBlockUserMutation();
-
+//Изменения для query
   const handleDelete = async (userId) => {
     if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
       try {
@@ -196,9 +192,21 @@ const AdminUsersTable = () => {
     onColumnOrderChange: setColumnOrder,
   });
 
-  if (isLoading) return <Typography>Загрузка пользователей...</Typography>;
-  if (isError) return <Typography color="error">Ошибка: {error.toString()}</Typography>;
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
+  if (isError) {
+    return (
+      <Alert severity="error" sx={{ mb: 3 }}>
+        {error?.data?.message || error?.message || 'Ошибка загрузки пользователей'}
+      </Alert>
+    );
+  }
   return (
     <DndProvider backend={HTML5Backend}>
       <Paper elevation={3} sx={{ p: 3, maxWidth: 1200, mx: 'auto', mt: 4 }}>

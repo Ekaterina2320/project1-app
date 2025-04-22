@@ -1,48 +1,38 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useCallback, lazy, Suspense  } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
-import { Container as MuiContainer, Grid, CssBaseline, Drawer } from '@mui/material';
+import { Container as MuiContainer, Grid, CssBaseline, Drawer, CircularProgress } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from './redux/authSlice';
-//import useLoginState from './hooks/useLoginState';
-import AuthForm  from './components/AuthForm';
-//import FeedbackForm from './components/FeedbackForm';
-//import FeedbackList from './components/FeedbackList';
-import Profile from './components/Profile';
 import Header from './components/Header';
 import Footer from './components/Footer';
-import Menu from './components/Menu';
-import Content from './components/Content';
 import Navbar from './components/Navbar';
 import Container from './components/Container';
-import AdminDashboard from './pages/AdminDashboard';
-import ProtectedRoute from './components/ProtectedRoute';
 import Button from './components/Button';
-import About from './pages/About';
-import Contact from './pages/Contact';
 import { increment, decrement } from './redux/counterSlice';
 import './App.css';
+// Ленивые импорты для тяжелых компонентов
+const AuthForm = lazy(() => import('./components/AuthForm'));
+const Profile = lazy(() => import('./components/Profile'));
+const Menu = lazy(() => import('./components/Menu'));
+const Content = lazy(() => import('./components/Content'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const ProtectedRoute = lazy(() => import('./components/ProtectedRoute'));
 
+// Компонент-заглушка для Suspense
+const Loader = () => (
+  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+    <CircularProgress size={60} />
+  </div>
+);
 
 
 const App = () => {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [feedbacks, setFeedbacks] = useState([]);
-  const [showLogin, setShowLogin] = useState(true); // true for login, false for register
-  //const isAuthenticated = useLoginState();
+  const [showLogin, setShowLogin] = useState(true); 
   const isAuthenticated = useSelector(state => state.auth.isAuthenticated);
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      dispatch(loginUser(JSON.parse(savedUser)));
-    }
-  }, [dispatch]);
-
-  const addFeedback = useCallback((feedback) => {
-    setFeedbacks(prev => [...prev, feedback]);
-  }, []);
 
   const handleAuthSuccess = useCallback(() => {
     setShowLogin(true);
@@ -73,6 +63,7 @@ const App = () => {
           <Navbar />
           <Header />
           {isAuthenticated }
+
           <Drawer anchor="left" open={menuOpen} onClose={() => setMenuOpen(false)}>
             <Menu onClose={() => setMenuOpen(false)} />
           </Drawer>
@@ -83,9 +74,10 @@ const App = () => {
             </Grid>
             <Grid item xs={12} md={9}>
               <Container>
-                {isAuthenticated ? (
-                  <>
-                    <Profile />
+                <Suspense fallback={<Loader />}>
+                  {isAuthenticated ? (
+                    <>
+                      <Profile />
                   </>
                 ) : (
                   <>
@@ -98,6 +90,8 @@ const App = () => {
                     </button>
                   </>
                 )}
+                </Suspense>
+
                 <div className="page-content">
                   <h1>Hello World!</h1>
                   <Button text="Нажми меня!" onClick={() => alert('Hello World!')} />
