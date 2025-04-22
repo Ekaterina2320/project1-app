@@ -23,6 +23,8 @@ import Contact from './pages/Contact';
 import { increment, decrement } from './redux/counterSlice';
 import './App.css';
 
+
+
 const App = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [feedbacks, setFeedbacks] = useState([]);

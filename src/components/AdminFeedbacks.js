@@ -1,38 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+// AdminFeedbacks.js
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import {
+  useGetFeedbacksQuery,
+  useDeleteFeedbackMutation,
+  useBlockFeedbackMutation,
+} from '../redux/apiSlice';
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import {
-  fetchFeedbacks,
-  deleteFeedback,
-  blockFeedback,
-} from '../redux/feedbackSlice';
 import { Paper, Typography, Box, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-// Компонент для перетаскиваемых заголовков
 const DraggableHeader = ({ header, moveColumn }) => {
   const ref = React.useRef(null);
-// Используем хук `useDrop` для обработки перетаскивания колонок
   const [, drop] = useDrop({
-    accept: 'column', // Тип элемента, который можно перетаскивать
+    accept: 'column',
     hover(item) {
       if (!ref.current) return;
-      const dragIndex = item.index; // Индекс перетаскиваемой колонки
-      const hoverIndex = header.index; // Индекс колонки, над которой находится курсор
-      if (dragIndex === hoverIndex) return; // Если индексы совпадают, ничего не делаем
-      moveColumn(dragIndex, hoverIndex); // Перемещаем колонку
-      item.index = hoverIndex; // Обновляем индекс перетаскиваемого элемента
+      const dragIndex = item.index;
+      const hoverIndex = header.index;
+      if (dragIndex === hoverIndex) return;
+      moveColumn(dragIndex, hoverIndex);
+      item.index = hoverIndex;
     },
   });
- // Используем хук `useDrag` для перетаскивания
+
   const [{ isDragging }, drag] = useDrag({
     type: 'column',
     item: { index: header.index },
@@ -40,7 +39,7 @@ const DraggableHeader = ({ header, moveColumn }) => {
       isDragging: monitor.isDragging(),
     }),
   });
-// Привязываем перетаскивание и сброс к элементу
+
   drag(drop(ref));
 
   return (
@@ -64,31 +63,36 @@ const DraggableHeader = ({ header, moveColumn }) => {
     </th>
   );
 };
-// Основной компонент для управления отзывами
+
 const AdminFeedbacks = () => {
-  const dispatch = useDispatch();
-  const { items: feedbacks, loading, error } = useSelector((state) => state.feedbacks);
   const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState(
     ['id', 'author', 'title', 'message', 'date', 'isBlocked', 'actions']
   );
 
-  useEffect(() => {
-    if (!feedbacks || feedbacks.length === 0) {
-      dispatch(fetchFeedbacks());// Загружаем отзывы, если их нет в состоянии
-    }
-  }, [dispatch]); // Только dispatch в зависимостях
-// Функция для удаления отзыва
-  const handleDelete = (id) => {
+  // Используем RTK Query хуки
+  const { data: feedbacks = [], isLoading, isError, error } = useGetFeedbacksQuery();
+  const [deleteFeedback] = useDeleteFeedbackMutation();
+  const [blockFeedback] = useBlockFeedbackMutation();
+
+  const handleDelete = async (id) => {
     if (window.confirm('Вы уверены, что хотите удалить этот отзыв?')) {
-      dispatch(deleteFeedback(id));
+      try {
+        await deleteFeedback(id).unwrap();
+      } catch (err) {
+        console.error('Ошибка при удалении отзыва:', err);
+      }
     }
   };
-// Функция для блокировки/разблокировки отзыва
-  const handleBlock = (id, isBlocked) => {
-    dispatch(blockFeedback({ id, isBlocked }));
+
+  const handleBlock = async (id, isBlocked) => {
+    try {
+      await blockFeedback({ id, isBlocked }).unwrap();
+    } catch (err) {
+      console.error('Ошибка при блокировке отзыва', err);
+    }
   };
-// Определение колонок таблицы
+
   const columns = [
     {
       accessorKey: 'id',
@@ -149,7 +153,6 @@ const AdminFeedbacks = () => {
       header: 'Действия',
       cell: ({ row }) => (
         <div style={{ display: 'flex', gap: '8px' }}>
-        {/* Кнопка блокировки/разблокировки отзыва */}
           <IconButton color="error" onClick={() => handleDelete(row.original.id)}>
             <DeleteIcon />
           </IconButton>
@@ -163,22 +166,22 @@ const AdminFeedbacks = () => {
       ),
     },
   ];
-// Настройка таблицы
+
   const table = useReactTable({
-    data: feedbacks || [], // Данные для таблицы
-    columns, // Определенные колонки
-    getCoreRowModel: getCoreRowModel(), // Модель для получения строк
-    getSortedRowModel: getSortedRowModel(), // Модель для сортировки строк
+    data: feedbacks,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     state: {
-      sorting, // Текущая сортировка
-      columnOrder, // Текущий порядок колонок
+      sorting,
+      columnOrder,
     },
-    onSortingChange: setSorting, // Обновление состояния сортировки
-    onColumnOrderChange: setColumnOrder, // Обновление порядка колонок
+    onSortingChange: setSorting,
+    onColumnOrderChange: setColumnOrder,
   });
 
-  if (loading) return <Typography>Загрузка отзывов...</Typography>;
-  if (error) return <Typography color="error">Ошибка: {error}</Typography>;
+  if (isLoading) return <Typography>Загрузка отзывов...</Typography>;
+  if (isError) return <Typography color="error">Ошибка: {error.toString()}</Typography>;
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -217,7 +220,6 @@ const AdminFeedbacks = () => {
                         borderBottom: '1px solid #ddd',
                       }}
                     >
-                      {/* Отображаем содержимое ячеек */}
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}

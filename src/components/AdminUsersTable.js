@@ -1,12 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+// AdminUsersTable.js
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import {
+  useGetUsersQuery,
+  useDeleteUserMutation,
+  useUpdateUserRoleMutation,
+  useBlockUserMutation,
+} from '../redux/apiSlice';
 import {
   useReactTable,
   getCoreRowModel,
   flexRender,
   getSortedRowModel,
 } from '@tanstack/react-table';
-import { fetchUsers, deleteUser, updateUserRole, blockUser } from '../redux/authSlice';
 import { Paper, Typography, Box, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BlockIcon from '@mui/icons-material/Block';
@@ -14,10 +20,8 @@ import AdminPanelIcon from '@mui/icons-material/AdminPanelSettings';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
-// Компонент для перетаскиваемых заголовков
 const DraggableHeader = ({ header, moveColumn }) => {
   const ref = React.useRef(null);
-  // Настройка drop-зоны для перетаскивания колонок
   const [, drop] = useDrop({
     accept: 'column',
     hover(item) {
@@ -29,7 +33,7 @@ const DraggableHeader = ({ header, moveColumn }) => {
       item.index = hoverIndex;
     },
   });
-  // Настройка drag-источника для перетаскивания колонок
+
   const [{ isDragging }, drag] = useDrag({
     type: 'column',
     item: { index: header.index },
@@ -37,7 +41,7 @@ const DraggableHeader = ({ header, moveColumn }) => {
       isDragging: monitor.isDragging(),
     }),
   });
-  // Объединяем drag и drop функционал
+
   drag(drop(ref));
 
   return (
@@ -45,66 +49,68 @@ const DraggableHeader = ({ header, moveColumn }) => {
       ref={ref}
       style={{
         opacity: isDragging ? 0.5 : 1,
-        cursor: header.column.getCanSort() ? 'pointer' : 'move', // Указатель для сортировки или перетаскивания
+        cursor: header.column.getCanSort() ? 'pointer' : 'move',
         padding: '12px',
         borderBottom: '2px solid #ddd',
         textAlign: 'left',
         backgroundColor: '#f5f5f5',
       }}
-      onClick={header.column.getToggleSortingHandler()} // Обработчик клика для сортировки
+      onClick={header.column.getToggleSortingHandler()}
     >
       {flexRender(header.column.columnDef.header, header.getContext())}
       {{
         asc: ' 🔼',
         desc: ' 🔽',
-      }[header.column.getIsSorted()] ?? null} {/* Отображение значков сортировки */}
+      }[header.column.getIsSorted()] ?? null}
     </th>
   );
 };
-/* Компонент таблицы управления пользователями для администратора*/
+
 const AdminUsersTable = () => {
-  const dispatch = useDispatch();
-  const { users, loading, error } = useSelector((state) => state.auth);
-  const { currentUser } = useSelector((state) => state.auth);
-  const [sorting, setSorting] = useState([]); // Состояние для сортировки
+  const [sorting, setSorting] = useState([]);
   const [columnOrder, setColumnOrder] = useState(
-    ['id', 'name', 'email', 'role', 'isBlocked', 'actions'] // Изначальный порядок колонок
+    ['id', 'name', 'email', 'role', 'isBlocked', 'actions']
   );
 
-  useEffect(() => {
-    dispatch(fetchUsers());
-  }, [dispatch]);
-  /**
-   * Обработчик удаления пользователя
-   * @param {string} userId - ID пользователя
-   */
-  const handleDelete = (userId) => {
+  const { currentUser } = useSelector((state) => state.auth);
+
+  // Используем RTK Query хуки
+  const { data: users = [], isLoading, isError, error } = useGetUsersQuery();
+  const [deleteUser] = useDeleteUserMutation();
+  const [updateUserRole] = useUpdateUserRoleMutation();
+  const [blockUser] = useBlockUserMutation();
+
+  const handleDelete = async (userId) => {
     if (window.confirm('Вы уверены, что хотите удалить этого пользователя?')) {
-      dispatch(deleteUser(userId));
+      try {
+        await deleteUser(userId).unwrap();
+      } catch (err) {
+        console.error('Ошибка при удалении пользователя:', err);
+      }
     }
   };
-  /**
-   * Обработчик блокировки/разблокировки пользователя
-   * @param {string} userId - ID пользователя
-   * @param {boolean} isBlocked - Новый статус блокировки
-   */
-  const handleBlock = (userId, isBlocked) => {
-    dispatch(blockUser({ userId, isBlocked }));
+
+  const handleBlock = async (userId, isBlocked) => {
+    try {
+      await blockUser({ userId, isBlocked }).unwrap();
+    } catch (err) {
+      console.error('Ошибка при блокировке пользователя:', err);
+    }
   };
-  /**
-   * Обработчик изменения роли пользователя
-   * @param {string} userId - ID пользователя
-   * @param {string} newRole - Новая роль ('admin' или 'user')
-   */
-  const handleChangeRole = (userId, newRole) => {
-    dispatch(updateUserRole({ userId, newRole }));
+
+  const handleChangeRole = async (userId, newRole) => {
+    try {
+      await updateUserRole({ userId, newRole }).unwrap();
+    } catch (err) {
+      console.error('Ошибка при изменении роли пользовател:', err);
+    }
   };
 
   const columns = [
     {
       accessorKey: 'id',
       header: 'ID',
-      enableSorting: true, // Включаем сортировку
+      enableSorting: true,
     },
     {
       accessorKey: 'name',
@@ -119,7 +125,6 @@ const AdminUsersTable = () => {
     {
       accessorKey: 'role',
       header: 'Роль',
-      // Кастомное отображение ячейки для роли
       cell: ({ getValue }) => (
         <span
           style={{
@@ -135,7 +140,6 @@ const AdminUsersTable = () => {
     {
       accessorKey: 'isBlocked',
       header: 'Статус',
-      // Кастомное отображение статуса блокировки
       cell: ({ getValue }) => (
         <span
           style={{
@@ -150,10 +154,8 @@ const AdminUsersTable = () => {
     },
     {
       header: 'Действия',
-      // Кастомное отображение кнопок действий
       cell: ({ row }) => (
         <div style={{ display: 'flex', gap: '8px' }}>
-          {/* Кнопка удаления */}
           <IconButton
             color="error"
             onClick={() => handleDelete(row.original.id)}
@@ -161,7 +163,6 @@ const AdminUsersTable = () => {
           >
             <DeleteIcon />
           </IconButton>
-          {/* Кнопка блокировки/разблокировки */}
           <IconButton
             color={row.original.isBlocked ? 'success' : 'warning'}
             onClick={() => handleBlock(row.original.id, !row.original.isBlocked)}
@@ -169,7 +170,6 @@ const AdminUsersTable = () => {
           >
             <BlockIcon />
           </IconButton>
-          {/* Кнопка изменения роли */}
           {row.original.role !== 'admin' && (
             <IconButton
               color="primary"
@@ -182,22 +182,22 @@ const AdminUsersTable = () => {
       ),
     },
   ];
-// Создание экземпляра таблицы с помощью react-table
+
   const table = useReactTable({
-    data: users || [],
+    data: users,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), // Добавляем сортировку
+    getSortedRowModel: getSortedRowModel(),
     state: {
-      sorting, // Состояние сортировки
-      columnOrder, // Порядок колонок
+      sorting,
+      columnOrder,
     },
-    onSortingChange: setSorting, // Обновление состояния сортировки
-    onColumnOrderChange: setColumnOrder, // Обновление порядка колонок
+    onSortingChange: setSorting,
+    onColumnOrderChange: setColumnOrder,
   });
 
-  if (loading) return <Typography>Загрузка пользователей...</Typography>;
-  if (error) return <Typography color="error">Ошибка: {error}</Typography>;
+  if (isLoading) return <Typography>Загрузка пользователей...</Typography>;
+  if (isError) return <Typography color="error">Ошибка: {error.toString()}</Typography>;
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -215,7 +215,6 @@ const AdminUsersTable = () => {
                       key={header.id}
                       header={header}
                       moveColumn={(dragIndex, hoverIndex) => {
-                        // Логика изменения порядка колонок
                         const newOrder = [...columnOrder];
                         const [removed] = newOrder.splice(dragIndex, 1);
                         newOrder.splice(hoverIndex, 0, removed);
@@ -226,7 +225,6 @@ const AdminUsersTable = () => {
                 </tr>
               ))}
             </thead>
-            {/* Тело таблицы */}
             <tbody>
               {table.getRowModel().rows.map((row) => (
                 <tr key={row.id}>

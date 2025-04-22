@@ -1,13 +1,18 @@
 import { configureStore } from '@reduxjs/toolkit';
-import counterReducer from './counterSlice'; // Теперь импорт будет работать
+import { apiSlice } from './apiSlice';
 import authReducer from './authSlice';
+import counterReducer from './counterSlice';
 import feedbackReducer from './feedbackSlice';
 
 export const store = configureStore({
   reducer: {
-    counter: counterReducer,
+    [apiSlice.reducerPath]: apiSlice.reducer,
     auth: authReducer,
-    feedbacks: feedbackReducer
-  }
+    counter: counterReducer,
+    feedbacks: feedbackReducer // оставляем существующий редьюсер, если он используется
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(apiSlice.middleware),
 });
+
 export default store;
